@@ -191,8 +191,10 @@ end
 
 if args[2] == 'install' then
   SvcInstall()
+  return
 elseif args[2] == 'delete' then
   SvcDelete()
+  return
 end
 
 local DispatchTable = {
