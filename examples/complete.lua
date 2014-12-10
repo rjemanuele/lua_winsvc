@@ -197,10 +197,10 @@ elseif args[2] == 'delete' then
   return
 end
 
-local DispatchTable = {
-  'name' = svcname,
-  'main' = svcmain
-  }
+local DispatchTable = [{
+  'ServiceName' = svcname,
+  'ServiceProc' = svcmain
+  }]
 
 if not StartServiceCtrlDispatcher(DispatchTable) then
   SvcReportEvent('StartServiceCtrlDispatcher Succeeded')
