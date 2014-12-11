@@ -26,7 +26,7 @@ local function ReportSvcStatus(dwCurrentState, dwWin32ExitCode, dwWaitHint)
     dwCurrentState == winsvc.SERVICE_STOPPED then
     gSvcStatus.dwCheckPoint = 0
   else
-	dwCheckPoint = dwCheckPoint + 1
+    dwCheckPoint = dwCheckPoint + 1
     gSvcStatus.dwCheckPoint = dwCheckPoint
   end
 
@@ -47,7 +47,7 @@ local function SvcCtrlHandler(dwCtrl)
     ReportSvcStatus(gSvcStatus.dwCurrentState, winsvc.NO_ERROR, 0)
          
     return
-  elseif dwCtrl == SERVICE_CONTROL_INTERROGATE then 
+  elseif dwCtrl == winsvc.SERVICE_CONTROL_INTERROGATE then 
     return
   end
 end
@@ -67,13 +67,13 @@ local function SvcInit(args)
   -- Create an event. The control handler function, SvcCtrlHandler,
   -- signals this event when it receives the stop control code.
 
-  ReportSvcStatus(winsvc.SERVICE_RUNNING, NO_ERROR, 0)
+  ReportSvcStatus(winsvc.SERVICE_RUNNING, winsvc.NO_ERROR, 0)
 
   -- TO_DO: Perform work until service stops.
 
   while gRunning do
     -- Do Stuff
-	winsvcaux.dbgSleep(1000)
+    winsvcaux.dbgSleep(1000)
   end
 
   ReportSvcStatus(winsvc.SERVICE_STOPPED, winsvc.NO_ERROR, 0);
@@ -97,7 +97,7 @@ local function SvcMain(args)
 
   -- Report initial status to the SCM
 
-  winsvc.ReportSvcStatus(winsvc.SERVICE_START_PENDING, winsvc.NO_ERROR, 3000)
+  ReportSvcStatus(winsvc.SERVICE_START_PENDING, winsvc.NO_ERROR, 3000)
 
   -- Perform service-specific initialization and work.
 
@@ -106,38 +106,38 @@ end
 
 
 local function SvcInstall()
-  local svcPath = winsvcaux.GetModuleFileName('')
+  local svcPath, err = winsvcaux.GetModuleFileName('')
   if svcPath == nil then
-    print('Cannot install service, service path unobtainable', winsvcaux.GetLastErrorString())
-	return
+    print('Cannot install service, service path unobtainable', err)
+    return
   end
 
   -- Get a handle to the SCM database
-  local schSCManager = winsvc.OpenSCManager(nil, nil, winsvc.SC_MANAGER_ALL_ACCESS)
+  local schSCManager, err = winsvc.OpenSCManager(nil, nil, winsvc.SC_MANAGER_ALL_ACCESS)
   if schSCManager == nil then
-    print('OpenSCManager failed', winsvcaux.GetLastErrorString())
-	return
+    print('OpenSCManager failed', err)
+    return
   end
 
   -- Create the Service
-  local schService = winsvc.CreateService(
+  local schService, err = winsvc.CreateService(
     schSCManager,
-	svcname,
-	svcname,
-	winsvc.SERVICE_ALL_ACCESS,
-	winsvc.SERVICE_WIN32_OWN_PROCESS,
-	winsvc.SERVICE_DEMAND_START,
-	winsvc.SERVICE_ERROR_NORMAL,
+    svcname,
+    svcname,
+    winsvc.SERVICE_ALL_ACCESS,
+    winsvc.SERVICE_WIN32_OWN_PROCESS,
+    winsvc.SERVICE_DEMAND_START,
+    winsvc.SERVICE_ERROR_NORMAL,
     svcPath,
-	nil,
-	nil,
-	nil,
-	nil,
-	nil)
+    nil,
+    nil,
+    nil,
+    nil,
+    nil)
 
   if schService == nil then
-    print('CreateService failed', winsvcaux.GetLastErrorString())
-	winsvc.CloseServiceHandle(schSCManager)
+    print('CreateService failed', err)
+    winsvc.CloseServiceHandle(schSCManager)
     return
   end
 
@@ -154,26 +154,26 @@ local function SvcDelete()
   local schSCManager = winsvc.OpenSCManager(nil, nil, winsvc.SC_MANAGER_ALL_ACCESS)
   if schSCManager == nil then
     print('OpenSCManager failed', winsvcaux.GetLastErrorString())
-	return
+    return
   end
 
   -- Open the Service
   local schService = winsvc.OpenService(
     schSCManager,
-	svcname,
-	winsvc.DELETE)
+    svcname,
+    winsvc.DELETE)
 
   if schService == nil then
     print('OpenService failed', winsvcaux.GetLastErrorString())
-	winsvc.CloseServiceHandle(schSCManager)
+    winsvc.CloseServiceHandle(schSCManager)
     return
   end
 
   -- Delete the Service
   local schService = winsvc.OpenService(
     schSCManager,
-	svcname,
-	winsvc.DELETE)
+    svcname,
+    winsvc.DELETE)
 
   if not winsvc.DeleteService(schService) then
     print('DeleteService failed', winsvcaux.GetLastErrorString())
